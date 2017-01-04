@@ -46,33 +46,40 @@ namespace RV_DCT
 
         private void CompressBtn_Click(object sender, EventArgs e)
         {
-            List<Color[,]> eightByEightArray = new List<Color[,]>();
-            
-            int startI = 0;
-            int startJ = 0;
-            int tmpI = 0, tmpJ = 0;
-            while (startJ < img.Height)
+            List<byte[,]> eightByEightArrayR = new List<byte[,]>();//vsi 8x8 rdeči barvni kanal
+            List<byte[,]> eightByEightArrayG = new List<byte[,]>();//vsi 8x8 zeleni barvni kanal
+            List<byte[,]> eightByEightArrayB = new List<byte[,]>();//vsi 8x8 modri barvni kanal
+
+            int startI = 0;//pove kje bomo začeli ko se for zanka začne (kje v sliki smo)
+            int startJ = 0;//pove kje bomo začeli ko se for zanka začne (kje v sliki smo)
+            int tmpI = 0, tmpJ = 0;//s tem si pomagamo postavljanja trenutne lokacije
+            while (startJ < img.Height)//premikamo se od leve proti desni ter vedno nižje. kak stopimp prenisko zaključimo
             {
-                Color[,] eightByEight = new Color[8, 8];
+                byte[,] eightByEightR = new byte[8, 8];
+                byte[,] eightByEightG = new byte[8, 8];
+                byte[,] eightByEightB = new byte[8, 8];
                 for (int i = startI; i < startI + 8; i++)
                 {
                     tmpJ = startJ;
                     for (int j = startJ; j < startJ + 8; j++)
                     {
-                        eightByEight[i - startI, j - startJ] = img.GetPixel(i, j);
+                        eightByEightR[i - startI, j - startJ] = img.GetPixel(i, j).R;
+                        eightByEightG[i - startI, j - startJ] = img.GetPixel(i, j).G;
+                        eightByEightB[i - startI, j - startJ] = img.GetPixel(i, j).B;
                         tmpJ++;
                     }
                     tmpI++;
                 }
                 startI = tmpI;
-                eightByEightArray.Add(eightByEight);
-                if (!(tmpI < img.Width))
+                eightByEightArrayR.Add(eightByEightR);
+                eightByEightArrayG.Add(eightByEightG);
+                eightByEightArrayB.Add(eightByEightB);
+                if (!(tmpI < img.Width)) //pomaknemo se en 8x8 kvadrat nižje kak pridemo dokonca širine
                 {
                     startJ = tmpJ;
                     startI = 0;
                     tmpI = 0;
                 }
-
             }
 
         }
