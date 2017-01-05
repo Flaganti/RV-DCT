@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,57 +36,63 @@ namespace RV_DCT
             OpenFileDialog open = new OpenFileDialog();
             if(open.ShowDialog() == DialogResult.OK)
             {
-                
+                eightByEightArrayB.Clear();
+                eightByEightArrayG.Clear();
+                eightByEightArrayR.Clear();
+
                 img = (Bitmap)Bitmap.FromFile(open.FileName);
                 width = img.Width;
                 height = img.Height;
-            }
-            if (img.Width % 8 != 0)
-            {
-                width = img.Width + (8 - (img.Width % 8));
-            }
-            if (img.Height % 8 != 0)
-            {
-                height = img.Height + (8 - (img.Height % 8));
-            }
-            img = new Bitmap(img, new Size(width, height));
-            this.img = img;
-
-
-
-            //To sem premakno sem da prihranim čas pri kompresiji
-            int startI = 0;//pove kje bomo začeli ko se for zanka začne (kje v sliki smo)
-            int startJ = 0;//pove kje bomo začeli ko se for zanka začne (kje v sliki smo)
-            int tmpI = 0, tmpJ = 0;//s tem si pomagamo postavljanja trenutne lokacije
-            while (startJ < img.Height)//premikamo se od leve proti desni ter vedno nižje. kak stopimp prenisko zaključimo
-            {
-                int[,] eightByEightR = new int[8, 8];
-                int[,] eightByEightB = new int[8, 8];
-                int[,] eightByEightG = new int[8, 8];
-                for (int i = startI; i < startI + 8; i++)
+                if (img.Width % 8 != 0)
                 {
-                    tmpJ = startJ;
-                    for (int j = startJ; j < startJ + 8; j++)
+                    width = img.Width + (8 - (img.Width % 8));
+                }
+                if (img.Height % 8 != 0)
+                {
+                    height = img.Height + (8 - (img.Height % 8));
+                }
+                img = new Bitmap(img, new Size(width, height));
+                this.img = img;
+
+                //To sem premakno sem da prihranim čas pri kompresiji
+                int startI = 0;//pove kje bomo začeli ko se for zanka začne (kje v sliki smo)
+                int startJ = 0;//pove kje bomo začeli ko se for zanka začne (kje v sliki smo)
+                int tmpI = 0, tmpJ = 0;//s tem si pomagamo postavljanja trenutne lokacije
+                while (startJ < img.Height)//premikamo se od leve proti desni ter vedno nižje. kak stopimp prenisko zaključimo
+                {
+                    int[,] eightByEightR = new int[8, 8];
+                    int[,] eightByEightB = new int[8, 8];
+                    int[,] eightByEightG = new int[8, 8];
+                    for (int i = startI; i < startI + 8; i++)
                     {
-                        eightByEightR[i - startI, j - startJ] = (img.GetPixel(i, j).R - 128);
-                        eightByEightG[i - startI, j - startJ] = (img.GetPixel(i, j).G - 128);
-                        eightByEightB[i - startI, j - startJ] = (img.GetPixel(i, j).B - 128);
-                        tmpJ++;
+                        tmpJ = startJ;
+                        for (int j = startJ; j < startJ + 8; j++)
+                        {
+                            eightByEightR[i - startI, j - startJ] = (img.GetPixel(i, j).R - 128);
+                            eightByEightG[i - startI, j - startJ] = (img.GetPixel(i, j).G - 128);
+                            eightByEightB[i - startI, j - startJ] = (img.GetPixel(i, j).B - 128);
+                            tmpJ++;
+                        }
+                        tmpI++;
                     }
-                    tmpI++;
+                    startI = tmpI;
+                    eightByEightArrayR.Add(FDCT(eightByEightR)); //FDCT se najdalje izvaja zato sem ga premakno sem da se naredi preden se slika naloži :v
+                    eightByEightArrayG.Add(FDCT(eightByEightG));
+                    eightByEightArrayB.Add(FDCT(eightByEightB));
+                    if (!(tmpI < img.Width)) //pomaknemo se en 8x8 kvadrat nižje kak pridemo dokonca širine
+                    {
+                        startJ = tmpJ;
+                        startI = 0;
+                        tmpI = 0;
+                    }
                 }
-                startI = tmpI;
-                eightByEightArrayR.Add(FDCT(eightByEightR)); //FDCT se najdalje izvaja zato sem ga premakno sem da se naredi preden se slika naloži :v
-                eightByEightArrayG.Add(FDCT(eightByEightG));
-                eightByEightArrayB.Add(FDCT(eightByEightB));
-                if (!(tmpI < img.Width)) //pomaknemo se en 8x8 kvadrat nižje kak pridemo dokonca širine
-                {
-                    startJ = tmpJ;
-                    startI = 0;
-                    tmpI = 0;
-                }
+                pictureBox1.Image = img;
             }
-            pictureBox1.Image = img;
+           
+
+
+
+            
         }
 
         private void CompressBtn_Click(object sender, EventArgs e)
@@ -105,10 +112,35 @@ namespace RV_DCT
 
         private void zapisVDatoteko(StringBuilder builder)
         {
-
-            string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)+"\\compressed.DCT";
+            String W = Convert.ToString(width, 2).PadLeft(16, '0');
+            String H = Convert.ToString(height, 2).PadLeft(16, '0');
+            byte ostanek = Convert.ToByte(8-(builder.Length%8));
+            String ost = ("").PadLeft(ostanek, '0');
+            builder.Append(ost);
+            List<byte> zapis = new List<byte>();
+            zapis.AddRange(GetBytes(W).ToList());
+            zapis.AddRange(GetBytes(H).ToList());
+            zapis.Add(ostanek);
+            zapis.AddRange(GetBytes(builder.ToString()).ToList());
+            using (BinaryWriter writer = new BinaryWriter(File.Open(path, FileMode.Create)))
+            {
+                foreach (byte baj in zapis)
+                {
+                    writer.Write(baj);
+                }
+            }
+            
         }
+        public static byte[] GetBytes(string bitString)
+        {
+            return Enumerable.Range(0, bitString.Length / 8).
+                Select(pos => Convert.ToByte(
+                    bitString.Substring(pos * 8, 8),
+                    2)
+                ).ToArray();
+        }
+
 
         public int[,] FDCT(int[,] eightByEight)
         {
@@ -120,8 +152,7 @@ namespace RV_DCT
             {
                 for(int v = 0; v < 8; v++)
                 {
-                    if (tabelaStiskanja[u, v] <= faktorKompresije)
-                        continue;
+                    
                     if (u == 0)
                         c1 = 1.0 / (double)(Math.Sqrt(2));
                     else
@@ -131,13 +162,16 @@ namespace RV_DCT
                     else
                         c2 = 1.0;
                     vstota = 0.0;
-                    for(int x = 0; x < 8; x++)
+                    if (!(tabelaStiskanja[u, v] <= faktorKompresije))
                     {
-                        for(int y = 0; y < 8; y++)
+                        for (int x = 0; x < 8; x++)
                         {
-                            double CosX = Math.Cos(((2.0 * x + 1.0) * u * Math.PI) / 16.0);
-                            double CosY = Math.Cos(((2.0 * y + 1.0) * v * Math.PI) / 16.0);
-                            vstota += eightByEight[x, y] * CosX * CosY ;
+                            for (int y = 0; y < 8; y++)
+                            {
+                                double CosX = Math.Cos(((2.0 * x + 1.0) * u * Math.PI) / 16.0);
+                                double CosY = Math.Cos(((2.0 * y + 1.0) * v * Math.PI) / 16.0);
+                                vstota += eightByEight[x, y] * CosX * CosY;
+                            }
                         }
                     }
                     double one_diVBy_four = 1.0 / 4.0;
@@ -146,7 +180,8 @@ namespace RV_DCT
             }
             return eightByEight_new;
         }
-        public int[] cikCak(int[,] array) {
+        public int[] cikCak(int[,] array_) {
+            int[,] array = new int[8, 8];
             int[] cikCak = new int[64];
             int N = 7;
             int OVERFLOW = 2033;
@@ -156,7 +191,7 @@ namespace RV_DCT
             int indeks = 0;
             do
             {
-                cikCak[indeks] = array[y,x];
+                cikCak[indeks] = array_[y,x];
                 array[y,x] = OVERFLOW;
                 if ((x > 0) && (y < N) && (array[y + 1,x - 1] < OVERFLOW)) // lahko gre levo dol
                 { x--; y++; }
