@@ -40,7 +40,7 @@
             // 
             // LoadBtn
             // 
-            this.LoadBtn.Location = new System.Drawing.Point(565, 12);
+            this.LoadBtn.Location = new System.Drawing.Point(1298, 12);
             this.LoadBtn.Name = "LoadBtn";
             this.LoadBtn.Size = new System.Drawing.Size(86, 35);
             this.LoadBtn.TabIndex = 0;
@@ -50,7 +50,7 @@
             // 
             // CompressBtn
             // 
-            this.CompressBtn.Location = new System.Drawing.Point(565, 53);
+            this.CompressBtn.Location = new System.Drawing.Point(1298, 53);
             this.CompressBtn.Name = "CompressBtn";
             this.CompressBtn.Size = new System.Drawing.Size(86, 35);
             this.CompressBtn.TabIndex = 1;
@@ -60,7 +60,7 @@
             // 
             // DecompressBtn
             // 
-            this.DecompressBtn.Location = new System.Drawing.Point(565, 94);
+            this.DecompressBtn.Location = new System.Drawing.Point(1298, 94);
             this.DecompressBtn.Name = "DecompressBtn";
             this.DecompressBtn.Size = new System.Drawing.Size(86, 35);
             this.DecompressBtn.TabIndex = 2;
@@ -72,17 +72,17 @@
             // 
             this.pictureBox1.Location = new System.Drawing.Point(12, 12);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(546, 400);
+            this.pictureBox1.Size = new System.Drawing.Size(1280, 720);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pictureBox1.TabIndex = 3;
             this.pictureBox1.TabStop = false;
             // 
             // trackBar1
             // 
-            this.trackBar1.Location = new System.Drawing.Point(12, 418);
+            this.trackBar1.Location = new System.Drawing.Point(12, 738);
             this.trackBar1.Maximum = 15;
             this.trackBar1.Name = "trackBar1";
-            this.trackBar1.Size = new System.Drawing.Size(546, 45);
+            this.trackBar1.Size = new System.Drawing.Size(1280, 45);
             this.trackBar1.TabIndex = 4;
             this.trackBar1.UseWaitCursor = true;
             this.trackBar1.ValueChanged += new System.EventHandler(this.trackBar1_ValueChanged);
@@ -90,7 +90,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(564, 432);
+            this.label1.Location = new System.Drawing.Point(1295, 748);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(13, 13);
             this.label1.TabIndex = 5;
@@ -100,7 +100,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(663, 479);
+            this.ClientSize = new System.Drawing.Size(1389, 861);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.trackBar1);
             this.Controls.Add(this.pictureBox1);

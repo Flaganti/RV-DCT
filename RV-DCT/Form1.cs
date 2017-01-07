@@ -22,19 +22,26 @@ namespace RV_DCT
         List<int[,]> eightByEightArrayR = new List<int[,]>();//vsi 8x8 rdeči barvni kanal
         List<int[,]> eightByEightArrayG = new List<int[,]>();//vsi 8x8 zeleni barvni kanal
         List<int[,]> eightByEightArrayB = new List<int[,]>();//vsi 8x8 modri barvni kanal
-
+        double[,] cos = new double[8, 8];
         public Form1()
         {
             InitializeComponent();
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    cos[i, j] = Math.Cos(((2.0 * i + 1.0) * j * Math.PI) / 16.0);
+                }
+            }
         }
 
         private void LoadBtn_Click(object sender, EventArgs e)
         {
 
             Bitmap img = null;
-            
+
             OpenFileDialog open = new OpenFileDialog();
-            if(open.ShowDialog() == DialogResult.OK)
+            if (open.ShowDialog() == DialogResult.OK)
             {
                 eightByEightArrayB.Clear();
                 eightByEightArrayG.Clear();
@@ -88,18 +95,18 @@ namespace RV_DCT
                 }
                 pictureBox1.Image = img;
             }
-           
 
 
 
-            
+
+
         }
 
         private void CompressBtn_Click(object sender, EventArgs e)
         {
             StringBuilder builder = new StringBuilder();
             var watch = System.Diagnostics.Stopwatch.StartNew();
-            for (int i= 0;i < eightByEightArrayR.Count; i++){
+            for (int i = 0; i < eightByEightArrayR.Count; i++) {
                 builder.Append(Code(cikCak(eightByEightArrayR[i])));
                 builder.Append(Code(cikCak(eightByEightArrayG[i])));
                 builder.Append(Code(cikCak(eightByEightArrayB[i])));
@@ -112,10 +119,11 @@ namespace RV_DCT
 
         private void zapisVDatoteko(StringBuilder builder)
         {
-            string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)+"\\compressed.DCT";
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\compressed.DCT";
+            //width = 8;height = 8;
             String W = Convert.ToString(width, 2).PadLeft(16, '0');
             String H = Convert.ToString(height, 2).PadLeft(16, '0');
-            byte ostanek = Convert.ToByte(8-(builder.Length%8));
+            byte ostanek = Convert.ToByte(8 - (builder.Length % 8));
             String ost = ("").PadLeft(ostanek, '0');
             builder.Append(ost);
             List<byte> zapis = new List<byte>();
@@ -130,7 +138,7 @@ namespace RV_DCT
                     writer.Write(baj);
                 }
             }
-            
+
         }
         public static byte[] GetBytes(string bitString)
         {
@@ -144,20 +152,20 @@ namespace RV_DCT
 
         public int[,] FDCT(int[,] eightByEight)
         {
-            //ne pisat tega -> eightByEight = new byte[8, 8] { { 5, 5, 5, 5, 45, 45, 45, 45 }, { 5, 5, 5, 5, 45, 45, 45, 45 }, { 5, 5, 5, 5, 45, 45, 45, 45 }, { 5, 5, 5, 5, 45, 45, 45, 45 }, { 5, 5, 5, 5, 45, 45, 45, 45 }, { 5, 5, 5, 5, 45, 45, 45, 45 }, { 5, 5, 5, 5, 45, 45, 45, 45 }, { 5, 5, 5, 5, 45, 45, 45, 45 } };
+            //eightByEight = new int[8, 8] { { 5, 5, 5, 5, 45, 45, 45, 45 }, { 5, 5, 5, 5, 45, 45, 45, 45 }, { 5, 5, 5, 5, 45, 45, 45, 45 }, { 5, 5, 5, 5, 45, 45, 45, 45 }, { 5, 5, 5, 5, 45, 45, 45, 45 }, { 5, 5, 5, 5, 45, 45, 45, 45 }, { 5, 5, 5, 5, 45, 45, 45, 45 }, { 5, 5, 5, 5, 45, 45, 45, 45 } };
             int[,] eightByEight_new = new int[8, 8];
             double c1, c2;
             double vstota = 0;
-            for(int u = 0; u < 8; u++)
+            for (int u = 0; u < 8; u++)
             {
-                for(int v = 0; v < 8; v++)
+                for (int v = 0; v < 8; v++)
                 {
-                    
+
                     if (u == 0)
                         c1 = 1.0 / (double)(Math.Sqrt(2));
                     else
                         c1 = 1.0;
-                    if(v==0)
+                    if (v == 0)
                         c2 = 1.0 / (double)(Math.Sqrt(2));
                     else
                         c2 = 1.0;
@@ -168,9 +176,7 @@ namespace RV_DCT
                         {
                             for (int y = 0; y < 8; y++)
                             {
-                                double CosX = Math.Cos(((2.0 * x + 1.0) * u * Math.PI) / 16.0);
-                                double CosY = Math.Cos(((2.0 * y + 1.0) * v * Math.PI) / 16.0);
-                                vstota += eightByEight[x, y] * CosX * CosY;
+                                vstota += eightByEight[x, y] * cos[x, u] * cos[y, v];
                             }
                         }
                     }
@@ -191,12 +197,12 @@ namespace RV_DCT
             int indeks = 0;
             do
             {
-                cikCak[indeks] = array_[y,x];
-                array[y,x] = OVERFLOW;
-                if ((x > 0) && (y < N) && (array[y + 1,x - 1] < OVERFLOW)) // lahko gre levo dol
+                cikCak[indeks] = array_[y, x];
+                array[y, x] = OVERFLOW;
+                if ((x > 0) && (y < N) && (array[y + 1, x - 1] < OVERFLOW)) // lahko gre levo dol
                 { x--; y++; }
                 else
-                if ((x < N) && (y > 0) && (array[y - 1,x + 1] < OVERFLOW)) // lahko gre desno gor
+                if ((x < N) && (y > 0) && (array[y - 1, x + 1] < OVERFLOW)) // lahko gre desno gor
                 { x++; y--; }
                 else if ((x > 0) && (x < N)) // lahko gre desno in ni v 1. stolpcu
                     x++;
@@ -259,12 +265,12 @@ namespace RV_DCT
                     {
                         String str = Convert.ToString(codingArray[i], 2);
                         int dolzina = str.Length + 1;
-                        builder.Append(Convert.ToString(dolzina,2).PadLeft(4, '0'));
+                        builder.Append(Convert.ToString(dolzina, 2).PadLeft(4, '0'));
                         builder.Append(str.PadLeft(dolzina, '0'));
                     }
                     else
                     {
-                        String str = Convert.ToString(codingArray[i]*(-1), 2);
+                        String str = Convert.ToString(codingArray[i] * (-1), 2);
                         int dolzina = str.Length + 1;
                         builder.Append(Convert.ToString(dolzina, 2).PadLeft(4, '0'));
                         builder.Append(str.PadLeft(dolzina, '1'));
@@ -282,13 +288,227 @@ namespace RV_DCT
 
         private void DecompressBtn_Click(object sender, EventArgs e)
         {
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\compressed.DCT";
+            byte[] bajt;
+            bajt = File.ReadAllBytes(path);
+            byte[] sirina = bajt.Take(2).ToArray();
+            StringBuilder sirina_str = new StringBuilder();
+            sirina_str.Append(Convert.ToString(sirina[0], 2).PadLeft(8, '0'));
+            sirina_str.Append(Convert.ToString(sirina[1], 2).PadLeft(8, '0'));
+            int sirina_int = Convert.ToInt32(sirina_str.ToString(), 2);
+
+            byte[] visina = bajt.Skip(2).Take(2).ToArray();
+            StringBuilder visina_str = new StringBuilder();
+            visina_str.Append(Convert.ToString(visina[0], 2).PadLeft(8, '0'));
+            visina_str.Append(Convert.ToString(visina[1], 2).PadLeft(8, '0'));
+            int visina_int = Convert.ToInt32(visina_str.ToString(), 2);
+            byte[] ostanek = bajt.Skip(4).Take(1).ToArray();
+            eightByEightArrayB.Clear();
+            eightByEightArrayG.Clear();
+            eightByEightArrayR.Clear();
+            StringBuilder builder = new StringBuilder();
+            foreach (byte b in bajt.Skip(5))
+            {
+                builder.Append(Convert.ToString(b, 2).PadLeft(8, '0'));
+            }
+            decompress(builder.ToString().Substring(0, builder.Length - (int)ostanek[0]));
+            Bitmap image = makeImg(visina_int,sirina_int);
+            pictureBox1.Image = image;
+        }
+        private Bitmap makeImg(int visina,int sirina)
+        {
+            Bitmap bitmap = new Bitmap(sirina, visina);
+            int startI = 0;//pove kje bomo začeli ko se for zanka začne (kje v sliki smo)
+            int startJ = 0;//pove kje bomo začeli ko se for zanka začne (kje v sliki smo)
+            int tmpI = 0, tmpJ = 0;//s tem si pomagamo postavljanja trenutne lokacije
+            //while (startJ < img.Height)//premikamo se od leve proti desni ter vedno nižje. kak stopimp prenisko zaključimo
+            for(int a =0;a<eightByEightArrayR.Count;a++){
+
+                int[,] eightByEightR = eightByEightArrayR[a];
+                int[,] eightByEightG = eightByEightArrayG[a];
+                int[,] eightByEightB = eightByEightArrayB[a];
+                for (int i = startI; i < startI + 8; i++)
+                {
+                    tmpJ = startJ;
+                    for (int j = startJ; j < startJ + 8; j++)
+                    {
+                        
+                        int red = eightByEightR[i - startI, j - startJ]+128;
+                        int green = eightByEightG[i - startI, j - startJ]+128;
+                        int blue = eightByEightB[i - startI, j - startJ]+128;
+                        if (red < 0)red = 0;
+                        if (red > 255) red = 255;
+                        if (green < 0) green = 0;
+                        if (green > 255) green = 255;
+                        if (blue < 0) blue = 0;
+                        if (blue > 255) blue = 255;
+                        Color color = Color.FromArgb(red, green, blue);
+                        bitmap.SetPixel(i, j, color);
+                        tmpJ++;
+                    }
+                    tmpI++;
+                }
+                startI = tmpI;
+                //eightByEightArrayR.Add(FDCT(eightByEightR));
+                //eightByEightArrayG.Add(FDCT(eightByEightG));
+                //eightByEightArrayB.Add(FDCT(eightByEightB));
+                if (!(tmpI < bitmap.Width)) //pomaknemo se en 8x8 kvadrat nižje kak pridemo dokonca širine
+                {
+                    startJ = tmpJ;
+                    startI = 0;
+                    tmpI = 0;
+                }
+            }
+            return bitmap;
 
         }
-
+        private void decompress(string kodirano)
+        {
+            int stevec = 0;//stevec za elemente
+            int rgb = 0; // rgb % 3 = 0(red) 1(green) 2(blue)
+            int[] matrika = new int[64];
+            for (int i = 0; i < kodirano.Length;)
+            {
+                if (stevec == 0)
+                {
+                    string DCT = kodirano.Substring(i, 11);
+                    if (DCT[0] == '0')
+                    {
+                        matrika[stevec] = Convert.ToInt32(DCT.Substring(1, DCT.Length - 1), 2);
+                    }
+                    else
+                    {
+                        matrika[stevec] = (Convert.ToInt32(DCT.Substring(1, DCT.Length - 1), 2)) * (-1);
+                    }
+                    i += 11;
+                    stevec++;
+                }
+                if (stevec != 0)
+                {
+                    if (kodirano[i] == '0')
+                    {
+                        i++;
+                        int tek_dol = Convert.ToInt32(kodirano.Substring(i, 6), 2);
+                        for (int j = 0; j < tek_dol; j++) {
+                            matrika[stevec + j] = 0;
+                        }
+                        i += 6;
+                        stevec += tek_dol;
+                        if (stevec < 64)
+                        {
+                            int dolzina = Convert.ToInt32(kodirano.Substring(i, 4), 2);
+                            i += 4;
+                            string AC = kodirano.Substring(i, dolzina);
+                            if (AC[0] == '0')
+                            {
+                                matrika[stevec] = Convert.ToInt32(AC.Substring(1, AC.Length - 1), 2);
+                            }
+                            else
+                            {
+                                matrika[stevec] = (Convert.ToInt32(AC.Substring(1, AC.Length - 1), 2)) * (-1);
+                            }
+                            stevec++;
+                            i += dolzina;
+                        }
+                    }
+                    else if (kodirano[i] == '1')
+                    {
+                        i++;
+                        int dolzina = Convert.ToInt32(kodirano.Substring(i, 4), 2);
+                        i += 4;
+                        string AC = kodirano.Substring(i, dolzina);
+                        if (AC[0] == '0')
+                        {
+                            matrika[stevec] = Convert.ToInt32(AC.Substring(1, AC.Length - 1), 2);
+                        }
+                        else
+                        {
+                            matrika[stevec] = (Convert.ToInt32(AC.Substring(1, AC.Length - 1), 2)) * (-1);
+                        }
+                        stevec++;
+                        i += dolzina;
+                    }
+                }
+                if (stevec == 64)
+                {
+                    if (rgb % 3 == 0) {
+                        eightByEightArrayR.Add(IDCT(deCikCak(matrika)));
+                    }
+                    else if (rgb % 3 == 1) {
+                        eightByEightArrayG.Add(IDCT(deCikCak(matrika)));
+                    }
+                    else if (rgb % 3 == 2) {
+                        eightByEightArrayB.Add(IDCT(deCikCak(matrika)));
+                    }
+                    rgb++;
+                    stevec = 0;
+                }
+            }
+        }
+        private int[,] IDCT(int[,] matrika)
+        {
+            int[,] IDCT = new int[8, 8];
+            for(int x = 0; x < 8; x++)
+            {
+                for(int y = 0; y < 8; y++)
+                {                    
+                    double vstota = 0.0;
+                    for (int u = 0; u < 8; u++)
+                    {
+                        for (int v = 0; v < 8; v++)
+                        {
+                            double c1, c2;
+                            if (u == 0)
+                                c1 = 1.0 / (double)(Math.Sqrt(2));
+                            else
+                                c1 = 1.0;
+                            if (v == 0)
+                                c2 = 1.0 / (double)(Math.Sqrt(2));
+                            else
+                                c2 = 1.0;
+                            vstota +=cos[x, u] * cos[y, v] *c1*c2* matrika[u, v];
+                        }
+                    }
+                double one_diVBy_four = 1.0 / 4.0;
+                IDCT[x, y] = (int)(one_diVBy_four * vstota);
+                }
+            }
+            return IDCT;
+        }
         private void trackBar1_ValueChanged(object sender, EventArgs e)
         {
             label1.Text = trackBar1.Value.ToString();
             faktorKompresije = trackBar1.Value;
+        }
+        private int[,] deCikCak(int[] matrika)
+        {
+            int[,] array = new int[8, 8];
+            int[,] deCikCak = new int[8,8];
+            int N = 7;
+            int OVERFLOW = 2033;
+            bool konec = false;
+            int x = 0;
+            int y = 0;
+            int indeks = 0;
+            do
+            {
+                deCikCak[y, x] = matrika[indeks];
+                array[y, x] = OVERFLOW;
+                if ((x > 0) && (y < N) && (array[y + 1, x - 1] < OVERFLOW)) // lahko gre levo dol
+                { x--; y++; }
+                else
+                if ((x < N) && (y > 0) && (array[y - 1, x + 1] < OVERFLOW)) // lahko gre desno gor
+                { x++; y--; }
+                else if ((x > 0) && (x < N)) // lahko gre desno in ni v 1. stolpcu
+                    x++;
+                else if ((y > 0) && (y < N)) // lahko gre dol in ni v 1. vrstici
+                    y++;
+                else if (x < N) // lahko gre desno (in je v 1. stolpcu)
+                    x++;
+                else konec = true;
+                indeks++;
+            } while (konec == false);
+            return deCikCak;
         }
     }
 }
